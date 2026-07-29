@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau des Vaisseaux - USS PetLycans{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">🛸 Flotte de Vaisseaux</h1>
+  <p class="page-subtitle">Inventaire et caractéristiques de la flotte d'exploration interstellaires.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">🛸</div>
+    <div>
+      <div class="stat-value">{{ vaisseaux|length }}</div>
+      <div class="stat-label">Total Vaisseaux</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  {% if vaisseaux %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom du Vaisseau</th>
+          <th>Type</th>
+          <th>Capacité</th>
+          <th>Missions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vaisseau in vaisseaux %}
+          <tr>
+            <td>#{{ vaisseau.id }}</td>
+            <td><strong>{{ vaisseau.nom }}</strong></td>
+            <td>
+              {% if vaisseau.type == "Exploration" %}
+                <span class="badge badge-cyan">🔍 {{ vaisseau.type }}</span>
+              {% elif vaisseau.type == "Cargo" %}
+                <span class="badge badge-amber">📦 {{ vaisseau.type }}</span>
+              {% elif vaisseau.type == "Transport" %}
+                <span class="badge badge-emerald">🚀 {{ vaisseau.type }}</span>
+              {% elif vaisseau.type == "Combat" %}
+                <span class="badge badge-rose">🛡️ {{ vaisseau.type }}</span>
+              {% else %}
+                <span class="badge badge-purple">{{ vaisseau.type }}</span>
+              {% endif %}
+            </td>
+            <td>{{ vaisseau.capacite }} unités</td>
+            <td>
+              <span class="badge badge-cyan">🚀 {{ vaisseau.missions.count }} mission(s)</span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🛸</div>
+      <h3>Aucun vaisseau enregistrée dans la flotte</h3>
+      <p style="margin-top: 0.5rem;">Utilisez l'interface d'administration ou l'API pour ajouter un nouveau vaisseau.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

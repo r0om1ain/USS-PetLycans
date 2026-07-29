@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau des Missions - USS PetLycans{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">🛸 Tableau des Missions</h1>
+  <p class="page-subtitle">Liste et statut opérationnel des expéditions spatiales en cours et programmées.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">🚀</div>
+    <div>
+      <div class="stat-value">{{ missions|length }}</div>
+      <div class="stat-label">Total des Missions</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  {% if missions %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Destination</th>
+          <th>Vaisseau Assigné</th>
+          <th>Date de Lancement</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mission in missions %}
+          <tr>
+            <td>#{{ mission.id }}</td>
+            <td><strong>{{ mission.destination }}</strong></td>
+            <td>
+              {% if mission.vaisseau %}
+                <span class="badge badge-purple">🛸 {{ mission.vaisseau.nom }}</span>
+              {% else %}
+                <span style="color: var(--text-muted);">Non assigné</span>
+              {% endif %}
+            </td>
+            <td>{{ mission.date_lancement|date:"d/m/Y" }}</td>
+            <td>
+              {% if mission.statut == "Programmée" %}
+                <span class="badge badge-cyan">🔵 {{ mission.statut }}</span>
+              {% elif mission.statut == "En cours" %}
+                <span class="badge badge-emerald">🟢 {{ mission.statut }}</span>
+              {% elif mission.statut == "Terminée" %}
+                <span class="badge badge-purple">🟣 {{ mission.statut }}</span>
+              {% else %}
+                <span class="badge badge-rose">🔴 {{ mission.statut }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🛰️</div>
+      <h3>Aucune mission enregistrée</h3>
+      <p style="margin-top: 0.5rem;">Utilisez l'interface d'administration ou l'API pour planifier votre première mission.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
