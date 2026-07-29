@@ -21,6 +21,11 @@ class Vaisseau(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.type})"
 
+    class Meta:
+        verbose_name = "Vaisseau"
+        verbose_name_plural = "Vaisseaux"
+
+
 
 class Mission(models.Model):
     STATUT_PROGRAMMEE = "Programmée"
