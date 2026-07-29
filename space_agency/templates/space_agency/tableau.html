@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block content %}
+  <table>
+    <thead>
+      <tr>
+        <th>Mission</th>
+        <th>Vaisseau</th>
+        <th>Date de lancement</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mission in missions %}
+        <tr>
+          <td>{{ mission.nom }}</td>
+          <td>{{ mission.vaisseau.nom }}</td>
+          <td>{{ mission.date_lancement }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
