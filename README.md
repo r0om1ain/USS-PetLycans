@@ -1,116 +1,164 @@
 # USS-PetLycans
 
-Projet Django pour une application fictive de gestion de missions spatiales.
+Projet Django pour une application fictive de gestion de missions spatiales (vaisseaux et missions).
 
-## Objectif du projet
+## Objectif
 
-Mettre en place une base Django avec Django REST Framework et une authentification JWT pour une future application de gestion de vaisseaux et de missions spatiales.
+Mettre en place une API REST avec Django REST Framework et une authentification JWT, ainsi que des vues HTML pour consulter les données.
 
-## Point realise pour l'instant
+## Fonctionnalités actuelles
 
-Le projet couvre actuellement la partie **Initialisation et Configuration** :
+- modèles `Vaisseau` et `Mission` (relation ForeignKey)
+- administration Django
+- serializers avec validation (mission programmée : date de lancement non passée)
+- API REST CRUD (`/api/vaisseaux/`, `/api/missions/`)
+- filtre des missions par statut (`?statut=Programmée`)
+- authentification JWT (`/token/`, `/token/refresh/`)
+- permissions : lecture publique, écriture authentifiée
+- vues HTML : accueil, tableau des missions, tableau des vaisseaux
+- fichiers de requêtes HTTP pour tester l'API
 
-- creation d'un environnement virtuel Python
-- installation de `django`
-- installation de `djangorestframework`
-- installation de `djangorestframework-simplejwt`
-- initialisation du projet Django `uss_petlycans`
-- creation de l'application `space_agency`
-- configuration de `REST Framework`
-- configuration de l'authentification JWT par defaut
+## Prérequis
 
-## Structure actuelle
+- Python 3
+- environnement virtuel recommandé
+
+## Installation
+
+```bash
+python -m venv .venv
+```
+
+Activation :
+
+```bash
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+Installation des dépendances :
+
+```bash
+pip install -r requirements.txt
+```
+
+Migrations et serveur :
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Puis ouvrir [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+
+## Structure du projet
 
 ```text
 USS-PetLycans/
-├── .venv/
-├── manage.py
+├── http-request/          # Requêtes HTTP de test (REST Client)
+│   ├── .env.example
+│   └── space-agency.http
 ├── space_agency/
-└── uss_petlycans/
+│   ├── admin.py
+│   ├── api_urls.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── views.py
+│   ├── migrations/
+│   └── templates/
+├── uss_petlycans/
+│   ├── settings.py
+│   └── urls.py
+├── manage.py
+├── requirements.txt
+└── README.md
 ```
 
-## Commandes utilisees
+## Modèles
 
-### 1. Creation et activation du venv
+### Vaisseau
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+| Champ     | Type              | Détail                                      |
+|-----------|-------------------|---------------------------------------------|
+| `nom`     | CharField         | max 100                                     |
+| `type`    | CharField         | Exploration, Cargo, Transport, Combat       |
+| `capacite`| PositiveIntegerField |                                          |
 
-### 2. Installation des dependances
+### Mission
 
-```bash
-pip install django djangorestframework djangorestframework-simplejwt
-```
+| Champ            | Type        | Détail                                              |
+|------------------|-------------|-----------------------------------------------------|
+| `destination`    | CharField   | max 100                                             |
+| `date_lancement` | DateField   |                                                     |
+| `statut`         | CharField   | Programmée, En cours, Terminée, Annulée (défaut : Programmée) |
+| `vaisseau`       | ForeignKey  | lien vers `Vaisseau` (`related_name="missions"`)    |
 
-### 3. Initialisation du projet Django
+## Routes
 
-```bash
-django-admin startproject uss_petlycans .
-```
+| URL                     | Description                          |
+|-------------------------|--------------------------------------|
+| `/`                     | Page d'accueil HTML                  |
+| `/missions/`            | Tableau HTML des missions            |
+| `/vaisseaux/`           | Tableau HTML des vaisseaux           |
+| `/admin/`               | Interface d'administration           |
+| `/api/vaisseaux/`       | API CRUD vaisseaux                   |
+| `/api/missions/`        | API CRUD missions                    |
+| `/api/missions/?statut=`| Filtre des missions par statut       |
+| `/token/`               | Obtenir un JWT (access + refresh)    |
+| `/token/refresh/`       | Rafraîchir le token d'accès          |
 
-### 4. Creation de l'application Django
+## Authentification JWT
 
-```bash
-python manage.py startapp space_agency
-```
+1. Créer un utilisateur : `python manage.py createsuperuser`
+2. Obtenir un token :
 
-## Configuration dans settings.py
+```http
+POST /token/
+Content-Type: application/json
 
-Dans `uss_petlycans/settings.py`, les applications suivantes ont ete ajoutees :
-
-```python
-INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "space_agency",
-]
-```
-
-Configuration de REST Framework pour JWT :
-
-```python
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
+{
+  "username": "votre-username",
+  "password": "votre-password"
 }
 ```
 
-## Verification
+3. Utiliser le token pour les écritures API :
 
-Pour verifier que la configuration Django est correcte :
+```http
+Authorization: Bearer <access_token>
+```
+
+Les lectures (`GET`) sont publiques. Les `POST`, `PUT`, `PATCH` et `DELETE` nécessitent un JWT valide.
+
+## Tests API avec REST Client
+
+Le dossier `http-request/` contient des exemples de requêtes.
+
+1. Copier `http-request/.env.example` vers `http-request/.env`
+2. Renseigner `username` et `password`
+3. Ouvrir `http-request/space-agency.http` et exécuter les requêtes (extension REST Client dans VS Code / Cursor)
+
+## Vérification
 
 ```bash
 python manage.py check
 ```
 
-## Lancement du projet
+## Configuration principale
 
-```bash
-source .venv/bin/activate
-python manage.py runserver
-```
+Dans `uss_petlycans/settings.py` :
 
-Puis ouvrir :
+- apps : `rest_framework`, `rest_framework_simplejwt`, `space_agency`
+- authentification JWT par défaut pour DRF
+- langue `fr-fr`, fuseau `Europe/Paris`
 
-```text
-http://127.0.0.1:8000/
-```
+## Suite possible
 
-## Etat actuel
-
-Le projet est pret pour commencer la suite :
-
-- creation des modeles
-- migrations
-- administration Django
-- serializers
-- vues API et HTML
+- permissions plus fines par rôle
+- pagination / filtres avancés sur l'API
+- enrichissement des templates HTML
+- tests unitaires automatisés
