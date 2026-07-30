@@ -1,5 +1,4 @@
 def assurer_coordonnees(missions):
-    """Vérifie que chaque lieu de mission a des coordonnées x, y."""
     for mission in missions:
         lieu = mission.destination
         if lieu.x is None or lieu.y is None:
@@ -8,15 +7,9 @@ def assurer_coordonnees(missions):
 
 
 def optimiser_trajet(missions):
-    """
-    Ordonne les missions avec l'algorithme du plus proche voisin.
-    On part de la première mission, puis on va toujours vers
-    la mission restante la plus proche.
-    """
     if len(missions) == 0:
         return {"ordre": [], "distance_totale": 0, "etapes": []}
 
-    # On s'assure d'avoir des coordonnées avant de calculer
     assurer_coordonnees(missions)
 
     ordre = [missions[0]]
@@ -27,7 +20,6 @@ def optimiser_trajet(missions):
     while len(restants) > 0:
         actuel = ordre[-1]
 
-        # On cherche la mission la plus proche parmi celles qui restent
         meilleure = restants[0]
         meilleure_distance = actuel.destination.distance_vers(meilleure.destination)
 
@@ -56,7 +48,6 @@ def optimiser_trajet(missions):
 
 
 def resultat_en_dict(vaisseau, resultat):
-    """Transforme le résultat d'optimisation en dictionnaire simple."""
     ordre = []
     for mission in resultat["ordre"]:
         lieu = mission.destination

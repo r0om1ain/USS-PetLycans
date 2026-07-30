@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
@@ -13,18 +13,18 @@ def home(request):
     return render(request, "base.html", {})
 
 
+def missions_actives_du_vaisseau(vaisseau):
+    missions = Mission.objects.filter(
+        vaisseau=vaisseau,
+        statut__in=[Mission.STATUT_PROGRAMMEE, Mission.STATUT_EN_COURS],
+    ).order_by("date_lancement")
+    return list(missions)
+
+
 class VaisseauViewSet(viewsets.ModelViewSet):
     queryset = Vaisseau.objects.all()
     serializer_class = VaisseauSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def _missions_actives(self, vaisseau):
-        """Récupère dynamiquement les missions encore à faire pour ce vaisseau."""
-        missions = Mission.objects.filter(
-            vaisseau=vaisseau,
-            statut__in=[Mission.STATUT_PROGRAMMEE, Mission.STATUT_EN_COURS],
-        ).order_by("date_lancement")
-        return list(missions)
 
     @action(
         detail=True,
@@ -33,14 +33,8 @@ class VaisseauViewSet(viewsets.ModelViewSet):
         permission_classes=[AllowAny],
     )
     def optimiser_trajet_vaisseau(self, request, pk=None):
-        """
-        Pour UN vaisseau :
-        1. récupère ses missions existantes
-        2. ajoute des coordonnées fictives si besoin
-        3. calcule le meilleur ordre de déplacement
-        """
         vaisseau = self.get_object()
-        missions = self._missions_actives(vaisseau)
+        missions = missions_actives_du_vaisseau(vaisseau)
 
         if len(missions) == 0:
             return Response(
@@ -64,14 +58,10 @@ class VaisseauViewSet(viewsets.ModelViewSet):
         permission_classes=[AllowAny],
     )
     def optimiser_trajets(self, request):
-        """
-        Pour TOUS les vaisseaux :
-        récupère les missions de chacun et optimise leurs déplacements.
-        """
         tous_les_resultats = []
 
         for vaisseau in Vaisseau.objects.all():
-            missions = self._missions_actives(vaisseau)
+            missions = missions_actives_du_vaisseau(vaisseau)
             resultat = optimiser_trajet(missions)
             tous_les_resultats.append(resultat_en_dict(vaisseau, resultat))
 
@@ -146,4 +136,20 @@ def tableau_vaisseaux(request):
     vaisseaux = Vaisseau.objects.all()
     return render(
         request, "space_agency/tableau_vaisseaux.html", {"vaisseaux": vaisseaux}
+    )
+
+
+def carte_trajet(request, pk):
+    vaisseau = get_object_or_404(Vaisseau, pk=pk)
+    missions = missions_actives_du_vaisseau(vaisseau)
+    resultat = optimiser_trajet(missions)
+    trajet = resultat_en_dict(vaisseau, resultat)
+
+    return render(
+        request,
+        "space_agency/carte_trajet.html",
+        {
+            "vaisseau": vaisseau,
+            "trajet": trajet,
+        },
     )

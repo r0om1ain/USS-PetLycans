@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Carte du trajet - {{ vaisseau.nom }}{% endblock %}
+
+{% block content %}
+<style>
+  .map-layout {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .map-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .map-svg-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background-image:
+      linear-gradient(rgba(7, 11, 20, 0.35), rgba(7, 11, 20, 0.45)),
+      url("{% static 'space_agency/univers.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    overflow: hidden;
+  }
+
+  #carte-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .route-line {
+    fill: none;
+    stroke: #38bdf8;
+    stroke-width: 2.5;
+    stroke-dasharray: 8 7;
+    stroke-linecap: round;
+    animation: dash-move 1.2s linear infinite, blink-line 1s ease-in-out infinite;
+  }
+
+  @keyframes dash-move {
+    to { stroke-dashoffset: -30; }
+  }
+
+  @keyframes blink-line {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+
+  .point-dot {
+    fill: #a855f7;
+    stroke: #f1f5f9;
+    stroke-width: 2;
+  }
+
+  .point-start {
+    fill: #10b981;
+  }
+
+  .point-end {
+    fill: #f59e0b;
+  }
+
+  .point-label {
+    fill: #f1f5f9;
+    font-size: 12px;
+    font-family: var(--font-body);
+    paint-order: stroke;
+    stroke: rgba(7, 11, 20, 0.9);
+    stroke-width: 3px;
+  }
+
+  .link-vaisseau {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .link-vaisseau:hover {
+    color: var(--accent-cyan);
+    text-decoration: underline;
+  }
+
+  .etapes-list {
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .etape-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid var(--border-color);
+  }
+</style>
+
+<div class="page-header">
+  <h1 class="page-title">🗺️ Carte du trajet</h1>
+  <p class="page-subtitle">
+    Trajet optimisé pour
+    <strong>{{ vaisseau.nom }}</strong>
+    — distance totale :
+    <strong>{{ trajet.distance_totale|floatformat:1 }}</strong>
+  </p>
+  <p style="margin-top: 0.75rem;">
+    <a href="{% url 'tableau_vaisseaux' %}" class="badge badge-cyan">← Retour aux vaisseaux</a>
+    <a href="{% url 'tableau_missions' %}" class="badge badge-purple">← Retour aux missions</a>
+  </p>
+</div>
+
+<div class="map-layout">
+  <div class="map-panel">
+    {% if trajet.ordre %}
+      <div class="map-svg-wrap">
+        <svg id="carte-svg" viewBox="0 0 800 500" aria-label="Carte 2D des missions"></svg>
+      </div>
+      {{ trajet|json_script:"trajet-data" }}
+      <script>
+        const trajet = JSON.parse(document.getElementById("trajet-data").textContent);
+        const points = trajet.ordre;
+        const svg = document.getElementById("carte-svg");
+
+        const marge = 110;
+        const largeur = 800;
+        const hauteur = 500;
+
+        let minX = points[0].x;
+        let maxX = points[0].x;
+        let minY = points[0].y;
+        let maxY = points[0].y;
+
+        for (let i = 0; i < points.length; i++) {
+          if (points[i].x < minX) minX = points[i].x;
+          if (points[i].x > maxX) maxX = points[i].x;
+          if (points[i].y < minY) minY = points[i].y;
+          if (points[i].y > maxY) maxY = points[i].y;
+        }
+
+        if (minX === maxX) {
+          minX = minX - 10;
+          maxX = maxX + 10;
+        }
+        if (minY === maxY) {
+          minY = minY - 10;
+          maxY = maxY + 10;
+        }
+
+        function versSvgX(x) {
+          return marge + ((x - minX) / (maxX - minX)) * (largeur - 2 * marge);
+        }
+
+        function versSvgY(y) {
+          return hauteur - marge - ((y - minY) / (maxY - minY)) * (hauteur - 2 * marge);
+        }
+
+        for (let i = 0; i < points.length - 1; i++) {
+          const ligne = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          ligne.setAttribute("x1", versSvgX(points[i].x));
+          ligne.setAttribute("y1", versSvgY(points[i].y));
+          ligne.setAttribute("x2", versSvgX(points[i + 1].x));
+          ligne.setAttribute("y2", versSvgY(points[i + 1].y));
+          ligne.setAttribute("class", "route-line");
+          ligne.style.animationDelay = (i * 0.15) + "s";
+          svg.appendChild(ligne);
+        }
+
+        for (let i = 0; i < points.length; i++) {
+          const px = versSvgX(points[i].x);
+          const py = versSvgY(points[i].y);
+
+          const cercle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          cercle.setAttribute("cx", px);
+          cercle.setAttribute("cy", py);
+          cercle.setAttribute("r", 8);
+
+          let classe = "point-dot";
+          if (i === 0) {
+            classe = classe + " point-start";
+          }
+          if (i === points.length - 1) {
+            classe = classe + " point-end";
+          }
+          cercle.setAttribute("class", classe);
+          svg.appendChild(cercle);
+
+          const aDroite = px > largeur / 2;
+          const tropHaut = py < 40;
+
+          const texte = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          if (aDroite) {
+            texte.setAttribute("x", px - 12);
+            texte.setAttribute("text-anchor", "end");
+          } else {
+            texte.setAttribute("x", px + 12);
+            texte.setAttribute("text-anchor", "start");
+          }
+          if (tropHaut) {
+            texte.setAttribute("y", py + 22);
+          } else {
+            texte.setAttribute("y", py - 12);
+          }
+          texte.setAttribute("class", "point-label");
+          texte.textContent = (i + 1) + ". " + points[i].lieu;
+          svg.appendChild(texte);
+        }
+      </script>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🛰️</div>
+        <h3>Aucune mission active</h3>
+        <p style="margin-top: 0.5rem;">Ce vaisseau n'a pas de mission Programmée ou En cours.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if trajet.etapes %}
+  <div class="map-panel">
+    <h2 style="font-family: var(--font-title); margin-bottom: 1rem; font-size: 1.1rem;">Étapes du trajet</h2>
+    <ul class="etapes-list">
+      {% for etape in trajet.etapes %}
+        <li class="etape-item">
+          <span>{{ etape.de }} → {{ etape.vers }}</span>
+          <span class="badge badge-cyan">{{ etape.distance|floatformat:1 }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

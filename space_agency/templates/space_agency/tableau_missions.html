@@ -37,7 +37,9 @@
             <td><strong>{{ mission.destination }}</strong></td>
             <td>
               {% if mission.vaisseau %}
-                <span class="badge badge-purple">🛸 {{ mission.vaisseau.nom }}</span>
+                <a href="{% url 'carte_trajet' mission.vaisseau.id %}" class="badge badge-purple" style="text-decoration: none;">
+                  🛸 {{ mission.vaisseau.nom }}
+                </a>
               {% else %}
                 <span style="color: var(--text-muted);">Non assigné</span>
               {% endif %}

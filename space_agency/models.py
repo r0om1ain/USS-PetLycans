@@ -36,7 +36,6 @@ class Lieu(models.Model):
         verbose_name_plural = "Lieux"
 
     def coords_depuis_nom(self):
-        """Inventer des coordonnées fictives à partir du nom du lieu."""
         total = 0
         for lettre in self.nom:
             total = total + ord(lettre)
@@ -46,13 +45,11 @@ class Lieu(models.Model):
         return x, y
 
     def save(self, *args, **kwargs):
-        # Si aucune coordonnée n'est fournie, on les crée à partir du nom
         if self.x is None and self.y is None:
             self.x, self.y = self.coords_depuis_nom()
         super().save(*args, **kwargs)
 
     def distance_vers(self, autre):
-        """Distance euclidienne 2D entre ce lieu et un autre."""
         dx = self.x - autre.x
         dy = self.y - autre.y
         return (dx * dx + dy * dy) ** 0.5

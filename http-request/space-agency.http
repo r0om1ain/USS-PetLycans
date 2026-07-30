@@ -100,13 +100,11 @@ Content-Type: application/json
 
 ###
 
-# Optimise le trajet d'UN vaisseau (missions récupérées dynamiquement)
 GET {{base_url}}/api/vaisseaux/1/optimiser-trajet/
 Content-Type: application/json
 
 ###
 
-# Optimise les trajets de TOUS les vaisseaux
 GET {{base_url}}/api/vaisseaux/optimiser-trajets/
 Content-Type: application/json
 

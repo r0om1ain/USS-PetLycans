@@ -1,31 +1,24 @@
-# Environment variables
 .env
 
-# Virtual Environment
 .venv/
 venv/
 env/
 ENV/
 
-# Python bytecode / cache
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Database
 *.sqlite3
 db.sqlite3
 
-# IDE / Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Static and media directories
 staticfiles/
 media/
 
-# OS generated files
 .DS_Store
 Thumbs.db

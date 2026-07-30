@@ -31,13 +31,19 @@ class RouteTemplateTests(TestCase):
         self.assertTemplateUsed(response, "space_agency/tableau_vaisseaux.html")
         self.assertContains(response, "USS Voyager")
 
+    def test_carte_trajet_page(self):
+        response = self.client.get(f"/vaisseaux/{self.vaisseau.id}/carte/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "space_agency/carte_trajet.html")
+        self.assertContains(response, "USS Voyager")
+        self.assertContains(response, "Alpha Centauri")
+
 
 class LieuDistanceTests(TestCase):
     def setUp(self):
         self.vaisseau = Vaisseau.objects.create(
             nom="NCC-1701", type=Vaisseau.TYPE_EXPLORATION, capacite=50
         )
-        # Triangle 3-4-5 : Terre(0,0) -> Mars(3,4) = distance 5
         self.lieu_a = Lieu.objects.create(nom="Terre", x=0.0, y=0.0)
         self.lieu_b = Lieu.objects.create(nom="Mars", x=3.0, y=4.0)
         self.lieu_c = Lieu.objects.create(nom="Jupiter", x=10.0, y=0.0)
@@ -75,7 +81,6 @@ class LieuDistanceTests(TestCase):
         self.assertAlmostEqual(self.lieu_a.distance_vers(self.lieu_b), 5.0)
 
     def test_optimiser_trajet(self):
-        # Départ Terre : Mars est plus proche que Jupiter
         resultat = optimiser_trajet(
             [self.mission_a, self.mission_c, self.mission_b]
         )
@@ -97,7 +102,6 @@ class LieuDistanceTests(TestCase):
         self.assertEqual(response.data["vers"], "Mars")
 
     def test_api_optimiser_trajet_vaisseau(self):
-        # Les missions sont récupérées dynamiquement pour ce vaisseau
         url = f"/api/vaisseaux/{self.vaisseau.id}/optimiser-trajet/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

@@ -34,7 +34,11 @@
         {% for vaisseau in vaisseaux %}
           <tr>
             <td>#{{ vaisseau.id }}</td>
-            <td><strong>{{ vaisseau.nom }}</strong></td>
+            <td>
+              <a href="{% url 'carte_trajet' vaisseau.id %}" style="color: inherit; text-decoration: none;">
+                <strong>{{ vaisseau.nom }}</strong>
+              </a>
+            </td>
             <td>
               {% if vaisseau.type == "Exploration" %}
                 <span class="badge badge-cyan">🔍 {{ vaisseau.type }}</span>
