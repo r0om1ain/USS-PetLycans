@@ -37,7 +37,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "destination": "La Ligne de Front d'Alpha-Lupus",
+    "destination": "zfizejizrjgz",
     "date_lancement": "2026-08-01",
     "statut": "Programmée",
     "vaisseau": 4
@@ -64,6 +64,16 @@ Authorization: Bearer {{token}}
     "date_lancement": "2026-11-20",
     "statut": "Annulée",
     "vaisseau": 2
+}
+
+###
+
+PATCH {{base_url}}/api/missions/3/changer-statut/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "statut": "En cours"
 }
 
 ###

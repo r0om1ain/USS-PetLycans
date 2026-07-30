@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from django.utils import timezone
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from .models import Vaisseau, Mission
 from .serializers import VaisseauSerializer, MissionSerializer
@@ -27,6 +28,15 @@ class MissionViewSet(viewsets.ModelViewSet):
         if statut:
             queryset = queryset.filter(statut=statut)
         return queryset
+
+    @action(detail=True, methods=["patch", "post", "put"], url_path="changer-statut")
+    def changer_statut(self, request, id=None):
+        serializer = self.get_serializer(
+            self.get_object(), data={"statut": request.data.get("statut")}, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 def tableau_missions(request):

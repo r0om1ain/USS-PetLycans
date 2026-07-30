@@ -21,7 +21,7 @@ class MissionSerializer(serializers.ModelSerializer):
     def validate(self, data):
         statut = data.get('statut')
         date_lancement = data.get('date_lancement')
-        if statut == "Programmée" and date_lancement < datetime.now().date():
+        if statut == Mission.STATUT_PROGRAMMEE and date_lancement < datetime.now().date():
             raise serializers.ValidationError(
                 "Une mission programmée ne peut pas avoir une date de lancement dans le passé"
             )
