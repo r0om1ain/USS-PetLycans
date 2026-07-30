@@ -1,0 +1,72 @@
+@base_url = http://127.0.0.1:8000
+
+### 
+# @name loginStaff
+POST {{base_url}}/token/
+Content-Type: application/json
+
+{
+    "username": "{{$dotenv username}}",
+    "password": "{{$dotenv password}}"
+}
+
+### 
+@token = {{loginStaff.response.body.access}}
+
+###
+
+GET {{base_url}}/api/missions/?statut=Programmée
+Content-Type: application/json
+
+###
+
+POST {{base_url}}/api/vaisseaux/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nom": "Le Bec-aux-Crocs",
+    "type": "Combat",
+    "capacite": 90
+}
+
+###
+
+POST {{base_url}}/api/missions/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "destination": "La Ligne de Front d'Alpha-Lupus",
+    "date_lancement": "2026-08-01",
+    "statut": "Programmée",
+    "vaisseau": 4
+}
+
+###
+
+PATCH {{base_url}}/api/missions/3/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "date_lancement": "2026-10-08"
+}
+
+###
+
+PUT {{base_url}}/api/missions/4/
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "destination": "Station de Fret Grande-Bouche",
+    "date_lancement": "2026-11-20",
+    "statut": "Annulée",
+    "vaisseau": 2
+}
+
+###
+
+DELETE {{base_url}}/api/missions/4/
+Authorization: Bearer {{token}}

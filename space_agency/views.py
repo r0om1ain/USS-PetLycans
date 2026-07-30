@@ -21,6 +21,13 @@ class MissionViewSet(viewsets.ModelViewSet):
     serializer_class = MissionSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        statut = self.request.query_params.get("statut")
+        if statut:
+            queryset = queryset.filter(statut=statut)
+        return queryset
+
 
 def tableau_missions(request):
     missions = Mission.objects.all().select_related("vaisseau").order_by("-date_lancement")
